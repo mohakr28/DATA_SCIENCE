@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>حاسبة المعدل | USTHB – Data Science</title>
+
+    <!-- الخطوط والأيقونات -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- المكتبات (SweetAlert2 + Confetti) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+      :root {
+        --primary: #4f46e5;
+        --accent: #8b5cf6;
+        --secondary: #0ea5e9;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1e293b;
+        --light: #f8fafc;
+        --glass: rgba(255, 255, 255, 0.9);
+        --shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: "Tajawal", sans-serif;
+        margin: 0;
+        background: linear-gradient(135deg, #f0f9ff, #e0e7ff);
+        color: var(--dark);
+        padding-bottom: 150px; /* مساحة للشريط السفلي */
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+
+      /* ================= HEADER ================= */
+      header {
+        background: linear-gradient(120deg, var(--primary), var(--accent));
+        color: white;
+        border-radius: 28px;
+        padding: 50px 20px;
+        text-align: center;
+        box-shadow: 0 25px 50px -10px rgba(79, 70, 229, 0.5);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 40px;
+      }
+
+      header h1 {
+        font-size: 2.6rem;
+        margin: 0;
+        font-weight: 900;
+      }
+
+      header p {
+        margin-top: 10px;
+        font-size: 1.2rem;
+        opacity: 0.95;
+      }
+
+      .hero-badges {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      /* ================= YEAR SELECTOR ================= */
+      .year-selector {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 10px;
+        border-radius: 50px;
+        backdrop-filter: blur(5px);
+      }
+
+      .year-btn {
+        border: none;
+        border-radius: 50px;
+        padding: 12px 26px;
+        font-family: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        background: white;
+        color: #475569;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: 0.3s;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .year-btn:hover {
+        transform: translateY(-3px);
+        color: var(--primary);
+      }
+
+      .year-btn.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
+      }
+
+      /* ================= SEMESTERS ================= */
+      .semesters-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      @media (max-width: 900px) {
+        .semesters-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .semester-card {
+        background: var(--glass);
+        border-radius: 22px;
+        padding: 25px;
+        box-shadow: var(--shadow);
+        transition: 0.3s;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+      }
+
+      .semester-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+      }
+
+      .semester-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px dashed #e2e8f0;
+      }
+
+      .semester-title {
+        font-size: 1.3rem;
+        font-weight: 900;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        color: var(--dark);
+      }
+
+      .semester-avg-badge {
+        padding: 8px 16px;
+        border-radius: 14px;
+        font-weight: 900;
+        background: #f1f5f9;
+        min-width: 70px;
+        text-align: center;
+        color: var(--primary);
+        transition: 0.3s;
+      }
+
+      /* ================= TABLE ================= */
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+      }
+
+      th {
+        font-size: 0.8rem;
+        color: #64748b;
+        text-align: center;
+        padding: 0 5px;
+        font-weight: 700;
+      }
+
+      tbody tr {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        border-radius: 14px;
+        transition: 0.2s;
+      }
+
+      tbody tr:hover {
+        transform: scale(1.01);
+      }
+
+      td {
+        padding: 8px;
+        vertical-align: middle;
+        text-align: center;
+      }
+
+      /* أول خلية (اسم المادة) */
+      td:first-child {
+        border-top-right-radius: 14px;
+        border-bottom-right-radius: 14px;
+      }
+      /* آخر خلية (زر الحذف) */
+      td:last-child {
+        border-top-left-radius: 14px;
+        border-bottom-left-radius: 14px;
+      }
+
+      /* تنسيق المدخلات */
+      input {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        background: #f1f5f9;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: 700;
+        font-family: inherit;
+        color: var(--dark);
+        transition: 0.2s;
+      }
+
+      input:focus {
+        outline: none;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+      }
+
+      .inp-name {
+        background: transparent;
+        text-align: right;
+        padding-right: 5px;
+      }
+      .inp-name:focus {
+        background: #f8fafc;
+      }
+
+      /* إخفاء الأعمدة في الهاتف */
+      @media (max-width: 600px) {
+        .col-hide-mobile {
+          display: none;
+        }
+        th,
+        td {
+          padding: 4px;
+          font-size: 0.9em;
+        }
+      }
+
+      .mod-avg {
+        display: block;
+        padding: 8px 4px;
+        font-weight: 900;
+        border-radius: 10px;
+        background: #f8fafc;
+        text-align: center;
+        font-size: 0.95rem;
+      }
+
+      /* ================= BUTTONS ================= */
+      .btn-add {
+        margin-top: 15px;
+        width: 100%;
+        padding: 14px;
+        border-radius: 14px;
+        border: 2px dashed #bae6fd;
+        background: #e0f2fe;
+        font-family: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        color: #0284c7;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .btn-add:hover {
+        background: #bae6fd;
+        transform: translateY(-2px);
+      }
+
+      .btn-del {
+        background: #fee2e2;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        cursor: pointer;
+        color: var(--danger);
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-del:hover {
+        background: var(--danger);
+        color: white;
+        transform: rotate(90deg);
+      }
+
+      .btn-reset {
+        margin-top: 50px;
+        width: 100%;
+        padding: 16px;
+        border-radius: 16px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        font-family: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.3s;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .btn-reset:hover {
+        background: #fef2f2;
+        color: var(--danger);
+        border-color: #fecaca;
+      }
+
+      /* ================= RESULTS BAR ================= */
+      .results-bar {
+        position: fixed;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(10px);
+        color: white;
+        border-radius: 24px;
+        padding: 15px 30px;
+        width: 92%;
+        max-width: 850px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        z-index: 1000;
+        animation: slideUp 0.5s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translate(-50%, 100px);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, 0);
+          opacity: 1;
+        }
+      }
+
+      .res-group {
+        display: flex;
+        gap: 40px;
+        align-items: center;
+      }
+
+      .res-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .res-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+
+      .res-value {
+        font-size: 1.6rem;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      /* Credits Progress Bar in Footer */
+      .credits-mini-bar {
+        width: 100px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        margin-top: 6px;
+        overflow: hidden;
+      }
+      .credits-fill {
+        height: 100%;
+        background: var(--success);
+        width: 0%;
+        transition: width 0.5s ease;
+      }
+
+      .res-decision {
+        padding: 12px 26px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-success {
+        background: var(--success);
+        color: white;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      }
+      .status-debt {
+        background: var(--warning);
+        color: white;
+      }
+      .status-fail {
+        background: var(--danger);
+        color: white;
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        margin-top: 60px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+      }
+
+      /* Mobile Tweaks */
+      @media (max-width: 650px) {
+        .results-bar {
+          flex-direction: column;
+          gap: 15px;
+          padding: 20px;
+          bottom: 15px;
+        }
+        .res-group {
+          width: 100%;
+          justify-content: space-around;
+          gap: 10px;
+        }
+        .res-decision {
+          width: 100%;
+          justify-content: center;
+        }
+        .year-selector {
+          justify-content: space-between;
+        }
+        .year-btn {
+          padding: 10px 18px;
+          flex: 1;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fa-solid fa-calculator"></i> حاسبة المعدل</h1>
+        <p>تخصص علوم البيانات – USTHB</p>
+        <div class="hero-badges">
+          <span class="badge"
+            ><i class="fa-solid fa-graduation-cap"></i> USTHB</span
+          >
+          <span class="badge"
+            ><i class="fa-solid fa-database"></i> Data Science</span
+          >
+          <span class="badge"
+            ><i class="fa-solid fa-shield-halved"></i> نظام LMD</span
+          >
+        </div>
+      </header>
+
+      <!-- Year Selector -->
+      <div class="year-selector">
+        <button class="year-btn" onclick="confirmLoadTemplate('L1')">L1</button>
+        <button class="year-btn" onclick="confirmLoadTemplate('L2')">L2</button>
+        <button class="year-btn" onclick="confirmLoadTemplate('L3')">L3</button>
+        <button class="year-btn" onclick="confirmLoadTemplate('M1')">M1</button>
+        <button class="year-btn" onclick="confirmLoadTemplate('M2')">M2</button>
+      </div>
+
+      <div class="semesters-grid">
+        <!-- Semester 1 Card -->
+        <div class="semester-card">
+          <div class="semester-header">
+            <span class="semester-title" id="title-s1">
+              <i class="fa-regular fa-calendar"></i> السداسي الفردي
+            </span>
+            <span class="semester-avg-badge" id="avg-s1">0.00</span>
+          </div>
+
+          <div class="table-container">
+            <table id="table-s1">
+              <thead>
+                <tr>
+                  <th style="width: 35%">المادة</th>
+                  <th class="col-hide-mobile" style="width: 12%">المعامل</th>
+                  <th class="col-hide-mobile" style="width: 12%">الرصيد</th>
+                  <th style="width: 15%">TD</th>
+                  <th style="width: 15%">Exam</th>
+                  <th style="width: 10%">المعدل</th>
+                  <th style="width: 5%"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <button class="btn-add" onclick="addRow('table-s1')">
+            <i class="fa-solid fa-plus"></i> إضافة مادة
+          </button>
+        </div>
+
+        <!-- Semester 2 Card -->
+        <div class="semester-card">
+          <div class="semester-header">
+            <span class="semester-title" id="title-s2">
+              <i class="fa-regular fa-calendar-check"></i> السداسي الزوجي
+            </span>
+            <span class="semester-avg-badge" id="avg-s2">0.00</span>
+          </div>
+
+          <div class="table-container">
+            <table id="table-s2">
+              <thead>
+                <tr>
+                  <th style="width: 35%">المادة</th>
+                  <th class="col-hide-mobile" style="width: 12%">المعامل</th>
+                  <th class="col-hide-mobile" style="width: 12%">الرصيد</th>
+                  <th style="width: 15%">TD</th>
+                  <th style="width: 15%">Exam</th>
+                  <th style="width: 10%">المعدل</th>
+                  <th style="width: 5%"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <button class="btn-add" onclick="addRow('table-s2')">
+            <i class="fa-solid fa-plus"></i> إضافة مادة
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-reset" onclick="resetAll()">
+        <i class="fa-solid fa-trash"></i> تفريغ كل البيانات وحذفها
+      </button>
+
+      <footer>© 2025 – Developed By Addar Mohamed Akram</footer>
+    </div>
+
+    <!-- Floating Results Bar -->
+    <div class="results-bar">
+      <div class="res-group">
+        <div class="res-item">
+          <span class="res-label">المعدل السنوي</span>
+          <span class="res-value" id="final-avg">0.00</span>
+        </div>
+
+        <div class="res-item">
+          <span class="res-label"
+            >الرصيد (<span id="final-credits">0</span>/60)</span
+          >
+          <div class="credits-mini-bar">
+            <div class="credits-fill" id="credits-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="final-decision" class="res-decision">
+        <i class="fa-solid fa-minus"></i> --
+      </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+      const CURRICULUM = {
+        L1: {
+          s1: [
+            { name: "Analyse 1", coeff: 5, credit: 7 },
+            { name: "Algèbre 1", coeff: 4, credit: 6 },
+            { name: "Algo & Struct Données 1", coeff: 3, credit: 6 },
+            { name: "Statistique 1", coeff: 3, credit: 6 },
+            { name: "TIC 1", coeff: 2, credit: 3 },
+            { name: "Anglais 1", coeff: 1, credit: 2 },
+          ],
+          s2: [
+            { name: "Analyse 2", coeff: 5, credit: 7 },
+            { name: "Algèbre 2", coeff: 4, credit: 6 },
+            { name: "Algo & Struct Données 2", coeff: 3, credit: 6 },
+            { name: "Statistique 2", coeff: 3, credit: 6 },
+            { name: "Outils Prog Math", coeff: 2, credit: 3 },
+            { name: "Anglais 2", coeff: 1, credit: 2 },
+          ],
+        },
+        L2: {
+          s1: [
+            { name: "Analyse 3", coeff: 5, credit: 7 },
+            { name: "Topologie", coeff: 3, credit: 5 },
+            { name: "Algèbre 3", coeff: 2, credit: 4 },
+            { name: "Probabilités 1", coeff: 3, credit: 5 },
+            { name: "Prog Orientée Objet", coeff: 2, credit: 3 },
+            { name: "Complexité", coeff: 2, credit: 4 },
+            { name: "Anglais 3", coeff: 1, credit: 2 },
+          ],
+          s2: [
+            { name: "Analyse 4", coeff: 4, credit: 7 },
+            { name: "Algèbre 4", coeff: 3, credit: 4 },
+            { name: "Probabilités 2", coeff: 3, credit: 4 },
+            { name: "Bases de Données", coeff: 2, credit: 4 },
+            { name: "Prog Python", coeff: 2, credit: 4 },
+            { name: "Recherche Opé 1", coeff: 3, credit: 5 },
+            { name: "Anglais 4", coeff: 1, credit: 2 },
+          ],
+        },
+        L3: {
+          s1: [
+            { name: "Statistique", coeff: 4, credit: 6 },
+            { name: "Data Mining 1", coeff: 3, credit: 6 },
+            { name: "Analyse Numérique", coeff: 3, credit: 5 },
+            { name: "Optimisation Non Linéaire", coeff: 3, credit: 5 },
+            { name: "Modélisation Etudes Cas", coeff: 3, credit: 5 },
+            { name: "Intro Management", coeff: 1, credit: 2 },
+          ],
+          s2: [
+            { name: "Processus Aléatoires", coeff: 4, credit: 6 },
+            { name: "Data Mining 2", coeff: 4, credit: 6 },
+            { name: "Recherche Opé 2", coeff: 2, credit: 4 },
+            { name: "Sondages et Enquêtes", coeff: 2, credit: 4 },
+            { name: "Gestion de Projets", coeff: 2, credit: 3 },
+            { name: "Théorie de l'Info", coeff: 2, credit: 3 },
+            { name: "Stage", coeff: 2, credit: 4 },
+          ],
+        },
+        M1: {
+          s1: [
+            { name: "Modèles Linéaires", coeff: 3, credit: 5 },
+            { name: "Séries Chronologiques", coeff: 3, credit: 5 },
+            { name: "Inférence Bayésienne", coeff: 2, credit: 4 },
+            { name: "Simulation", coeff: 2, credit: 4 },
+            { name: "Data Warehouse & OLAP", coeff: 3, credit: 5 },
+            { name: "Analyse Multicritère", coeff: 3, credit: 4 },
+            { name: "Intro Sécurité Info", coeff: 2, credit: 3 },
+          ],
+          s2: [
+            { name: "Estimation Non Param", coeff: 3, credit: 6 },
+            { name: "Données Catégorielles", coeff: 2, credit: 4 },
+            { name: "Machine Learning", coeff: 2, credit: 4 },
+            { name: "BDD Réparties", coeff: 2, credit: 4 },
+            { name: "Prog & Logiciels SD", coeff: 3, credit: 4 },
+            { name: "Machine Learning Avancé", coeff: 4, credit: 8 },
+            { name: "Modèles Graphiques", coeff: 3, credit: 6 },
+          ],
+        },
+        M2: {
+          s1: [
+            { name: "Théorie des Codes", coeff: 3, credit: 5 },
+            { name: "Arbres de Décision", coeff: 3, credit: 4 },
+            { name: "Finance", coeff: 2, credit: 3 },
+            { name: "Matière Optionnelle 1", coeff: 2, credit: 4 },
+            { name: "Matière Optionnelle 2", coeff: 2, credit: 4 },
+          ],
+          s2: [{ name: "Projet Fin d'Études (PFE)", coeff: 16, credit: 30 }],
+        },
+      };
+
+      // Toast notification configuration
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener("mouseenter", Swal.stopTimer);
+          toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+      });
+
+      window.onload = function () {
+        const savedData = localStorage.getItem("usthb_ds_design_v2");
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          restoreData(parsed);
+        } else {
+          loadTemplate("L1", false);
+        }
+      };
+
+      function confirmLoadTemplate(level) {
+        Swal.fire({
+          title: `تحميل مواد سنة ${level}؟`,
+          text: "سيتم استبدال الجدول الحالي وحذف النقاط المدخلة.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#4f46e5",
+          cancelButtonColor: "#94a3b8",
+          confirmButtonText: "نعم، تحميل",
+          cancelButtonText: "إلغاء",
+          customClass: { popup: "swal-rounded" },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            loadTemplate(level);
+            Toast.fire({
+              icon: "success",
+              title: `تم تحميل ${level} بنجاح`,
+            });
+          }
+        });
+      }
+
+      function loadTemplate(level, save = true) {
+        // Toggle active class on buttons
+        document
+          .querySelectorAll(".year-btn")
+          .forEach((b) => b.classList.remove("active"));
+        const activeBtn = Array.from(
+          document.querySelectorAll(".year-btn")
+        ).find((b) => b.textContent.includes(level));
+        if (activeBtn) activeBtn.classList.add("active");
+
+        const data = CURRICULUM[level];
+        document.querySelector("#table-s1 tbody").innerHTML = "";
+        document.querySelector("#table-s2 tbody").innerHTML = "";
+
+        data.s1.forEach((m) => addRow("table-s1", m));
+        data.s2.forEach((m) => addRow("table-s2", m));
+
+        updateHeaders(level);
+        calculateAll(false);
+        if (save) saveData();
+      }
+
+      function updateHeaders(level) {
+        let titles = {
+          L1: ["السداسي 1", "السداسي 2"],
+          L2: ["السداسي 3", "السداسي 4"],
+          L3: ["السداسي 5", "السداسي 6"],
+          M1: ["السداسي 1 (M1)", "السداسي 2 (M1)"],
+          M2: ["السداسي 3 (M2)", "السداسي 4 (M2)"],
+        };
+        document.getElementById(
+          "title-s1"
+        ).innerHTML = `<i class="fa-regular fa-calendar"></i> ${titles[level][0]}`;
+        document.getElementById(
+          "title-s2"
+        ).innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${titles[level][1]}`;
+      }
+
+      function addRow(tableId, data = {}) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        const row = tbody.insertRow();
+
+        const name = data.name || "";
+        const coeff = data.coeff || 1;
+        const credit = data.credit || 1;
+        const td = data.td || "";
+        const exam = data.exam || "";
+
+        row.innerHTML = `
+          <td><input type="text" class="inp-name" value="${name}" placeholder="المادة..."></td>
+          <td class="col-hide-mobile"><input type="number" class="inp-coeff" value="${coeff}" min="1" oninput="calculateAll()"></td>
+          <td class="col-hide-mobile"><input type="number" class="inp-credit" value="${credit}" min="1" oninput="calculateAll()"></td>
+          <td><input type="number" class="inp-grade inp-td" value="${td}" min="0" max="20" placeholder="-" oninput="validateInput(this); calculateAll()"></td>
+          <td><input type="number" class="inp-grade inp-exam" value="${exam}" min="0" max="20" placeholder="-" oninput="validateInput(this); calculateAll()"></td>
+          <td><span class="mod-avg">0.00</span></td>
+          <td><button class="btn-del" onclick="deleteRow(this)"><i class="fa-solid fa-xmark"></i></button></td>
+      `;
+      }
+
+      function validateInput(input) {
+        if (input.value > 20) input.value = 20;
+        if (input.value < 0) input.value = 0;
+      }
+
+      function deleteRow(btn) {
+        btn.closest("tr").remove();
+        calculateAll();
+      }
+
+      let hasCelebrated = false;
+
+      function calculateAll(allowConfetti = true) {
+        const s1 = calculateSemester("table-s1");
+        const s2 = calculateSemester("table-s2");
+
+        updateBadge("avg-s1", s1.avg);
+        updateBadge("avg-s2", s2.avg);
+
+        const annualAvg = (s1.avg + s2.avg) / 2;
+        const avgEl = document.getElementById("final-avg");
+        avgEl.innerText = annualAvg.toFixed(2);
+
+        // Annual Average Color
+        if (annualAvg >= 10) avgEl.style.color = "var(--success)";
+        else avgEl.style.color = "var(--danger)";
+
+        // Credits Logic with Compensation
+        let creditsS1 = s1.avg >= 10 ? 30 : s1.credits;
+        let creditsS2 = s2.avg >= 10 ? 30 : s2.credits;
+        if (annualAvg >= 10) {
+          creditsS1 = 30;
+          creditsS2 = 30;
+        }
+        const totalCredits = Math.min(60, creditsS1 + creditsS2);
+
+        document.getElementById("final-credits").innerText = totalCredits;
+        const percent = (totalCredits / 60) * 100;
+        document.getElementById("credits-bar").style.width = `${percent}%`;
+
+        // Decision Logic
+        const decisionEl = document.getElementById("final-decision");
+        decisionEl.className = "res-decision"; // reset classes
+
+        if (annualAvg >= 10) {
+          decisionEl.innerHTML =
+            '<i class="fa-solid fa-check-circle"></i> ناجح';
+          decisionEl.classList.add("status-success");
+
+          if (allowConfetti && !hasCelebrated) {
+            confetti({
+              particleCount: 150,
+              spread: 80,
+              origin: { y: 0.7 },
+              colors: ["#10b981", "#3b82f6", "#f59e0b"],
+            });
+            hasCelebrated = true;
+          }
+        } else if (totalCredits >= 30) {
+          decisionEl.innerHTML =
+            '<i class="fa-solid fa-exclamation-circle"></i> ديون';
+          decisionEl.classList.add("status-debt");
+          hasCelebrated = false;
+        } else {
+          decisionEl.innerHTML =
+            '<i class="fa-solid fa-times-circle"></i> راسب';
+          decisionEl.classList.add("status-fail");
+          hasCelebrated = false;
+        }
+
+        saveData();
+      }
+
+      function updateBadge(id, val) {
+        const el = document.getElementById(id);
+        el.innerText = val.toFixed(2);
+        if (val >= 10) {
+          el.style.color = "var(--success)";
+          el.style.background = "#d1fae5";
+        } else {
+          el.style.color = "var(--danger)";
+          el.style.background = "#fee2e2";
+        }
+      }
+
+      function calculateSemester(tableId) {
+        const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+        let totalPoints = 0;
+        let totalCoeff = 0;
+        let acquiredCredits = 0;
+
+        rows.forEach((row) => {
+          const coeff = parseFloat(row.querySelector(".inp-coeff").value) || 0;
+          const credit =
+            parseFloat(row.querySelector(".inp-credit").value) || 0;
+          const tdVal = row.querySelector(".inp-td").value;
+          const examVal = row.querySelector(".inp-exam").value;
+          const exam = parseFloat(examVal) || 0;
+
+          let avg = 0;
+          if (tdVal === "") {
+            avg = exam;
+          } else {
+            const td = parseFloat(tdVal) || 0;
+            avg = exam * 0.6 + td * 0.4; // 60% Exam, 40% TD
+          }
+
+          const avgSpan = row.querySelector(".mod-avg");
+          avgSpan.innerText = avg.toFixed(2);
+
+          if (avg >= 10) {
+            avgSpan.style.color = "var(--success)";
+            avgSpan.style.background = "#d1fae5";
+          } else {
+            avgSpan.style.color = "var(--danger)";
+            avgSpan.style.background = "#fee2e2";
+          }
+
+          totalPoints += avg * coeff;
+          totalCoeff += coeff;
+          if (avg >= 10) acquiredCredits += credit;
+        });
+
+        const semesterAvg = totalCoeff > 0 ? totalPoints / totalCoeff : 0;
+        return { avg: semesterAvg, credits: acquiredCredits };
+      }
+
+      function saveData() {
+        const data = {
+          s1: getTableData("table-s1"),
+          s2: getTableData("table-s2"),
+          activeYear:
+            document.querySelector(".year-btn.active")?.innerText || "L1",
+        };
+        localStorage.setItem("usthb_ds_design_v2", JSON.stringify(data));
+      }
+
+      function getTableData(tableId) {
+        return Array.from(
+          document.querySelectorAll(`#${tableId} tbody tr`)
+        ).map((row) => ({
+          name: row.querySelector(".inp-name").value,
+          coeff: row.querySelector(".inp-coeff").value,
+          credit: row.querySelector(".inp-credit").value,
+          td: row.querySelector(".inp-td").value,
+          exam: row.querySelector(".inp-exam").value,
+        }));
+      }
+
+      function restoreData(data) {
+        document.querySelector("#table-s1 tbody").innerHTML = "";
+        document.querySelector("#table-s2 tbody").innerHTML = "";
+        data.s1.forEach((m) => addRow("table-s1", m));
+        data.s2.forEach((m) => addRow("table-s2", m));
+
+        if (data.activeYear) {
+          document.querySelectorAll(".year-btn").forEach((b) => {
+            if (b.innerText === data.activeYear) b.classList.add("active");
+            else b.classList.remove("active");
+          });
+          updateHeaders(data.activeYear);
+        }
+        calculateAll(false);
+      }
+
+      function resetAll() {
+        Swal.fire({
+          title: "هل أنت متأكد؟",
+          text: "سيتم حذف جميع البيانات بشكل نهائي.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#ef4444",
+          cancelButtonColor: "#94a3b8",
+          confirmButtonText: "نعم، حذف",
+          cancelButtonText: "إلغاء",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            localStorage.removeItem("usthb_ds_design_v2");
+            location.reload();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
